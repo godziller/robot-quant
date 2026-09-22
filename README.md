@@ -9,5 +9,7 @@ source .venv/bin/activate
 python3 -m pip install --upgrade pip
 pip install -r requirements.txt
 python -c "import mujoco; print('MuJoCo:', mujoco.__version__)"
-python3 -m mujoco.viewer
+python -m mujoco.viewer --mjcf=assets/robotstudio_so101/scene.xml
 ```
+
+![SO-101 Arm](images/so101.png)
