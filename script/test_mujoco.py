@@ -2,7 +2,7 @@ import mujoco
 import mujoco.viewer
 import time
 
-model = mujoco.MjModel.from_xml_path("assets/robotstudio_so101/scene.xml")
+model = mujoco.MjModel.from_xml_path("assets/so_arm100/scene.xml")
 data = mujoco.MjData(model)
 
 with mujoco.viewer.launch_passive(model, data) as viewer:
