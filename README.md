@@ -74,6 +74,8 @@ On macOS, use `mjpython` in place of `python` if the viewer refuses to launch.
 
 ### Move the cube
 
+![Work Cell with table, cube and tray](images/PickAndPlaceModel.png)
+
 1. **Pause the simulation** with `Space`. The cube is welded to the table while the sim runs, so it can only be repositioned while paused.
 2. **Select the cube:** hold `Ctrl` + `Shift` and double left-click it.
 3. **Move it:** once the cube turns bright red, hold `Ctrl` + `Shift` and hold the right mouse button while dragging.
