@@ -60,7 +60,7 @@ python script/test_mujoco.py
 
 Opens the MuJoCo viewer and moves the arm back and forth. Close the viewer window to stop the script.
 
-Demo recording: [videos/MovingMujoco.webm](videos/MovingMujoco.webm)
+Demo recording: ![Scripted MuJoCo demo](videos/MovingMujoco.gif)
 
 ### Open the work-cell in the interactive viewer
 
