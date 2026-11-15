@@ -10,7 +10,7 @@ Dissertation project investigating whether the throughput–accuracy trade-off o
 |---|---|
 | MuJoCo simulation of the SO-ARM100 arm | Working |
 | Scripted demo | Working |
-| Policy inference (FP32 baseline) | TODO |
+| Policy inference (FP32 baseline) | Running in the MuJoCo viewer. Success rate not yet measured |
 | INT8 quantization | TODO |
 | NPU deployment and benchmarking | TODO |
 
@@ -27,30 +27,88 @@ robot-quant/
 │       ├── LICENSE
 │       └── CHANGELOG.md
 ├── docs/
+│   ├── HUGGING_FACE.md     # how the model's files map to the inference script
 │   └── MODEL_SELECTION.md  # why this model/policy was chosen
-├── images/                 # README images
+├── images/                 # images used in the README and docs
 ├── papers/                 # reference papers (PDF)
 ├── script/
-│   └── test_mujoco.py      # scripted back-and-forth arm demo
+│   ├── test_mujoco.py      # scripted back-and-forth arm demo
+│   └── run_policy.py       # runs the pretrained ACT policy in the work-cell
 ├── videos/                 # demo recordings
 └── requirements.txt
 ```
 
 ## Setup
 
-Run once from the repository root.
+Run once from the repository root. Python 3.12 is required: LeRobot's config loading fails on Python 3.14.
 
 ```bash
-python3 -m venv .venv
+# Option A: Python 3.12 already installed
+python3.12 -m venv .venv
+
+# Option B: let uv fetch Python 3.12 (leaves the system Python alone)
+# curl -LsSf https://astral.sh/uv/install.sh | sh
+# uv venv --python 3.12 .venv
+
 source .venv/bin/activate          # Windows: .venv\Scripts\Activate.ps1
-python3 -m pip install --upgrade pip
-pip install -r requirements.txt
+python --version                   # should print 3.12.x
+python -m pip install --upgrade pip
+pip install -r requirements.txt    # includes mujoco and lerobot
 python -c "import mujoco; print('MuJoCo:', mujoco.__version__)"
 ```
 
 Every later session only needs the `source .venv/bin/activate` line.
 
 ## Usage
+
+### Run the pretrained policy
+
+```bash
+python script/run_policy.py
+```
+
+Options:
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--episodes N` | 5 | Number of episodes to run |
+| `--seed S` | 123 | Random seed for the block spawn positions |
+
+The first run downloads the model (about 200 MB) from Hugging Face into its local cache. After that it loads from the cache.
+
+Each episode:
+
+1. The arm returns to its `home` pose and the block is placed at a random spot in front of the robot, 0.19 to 0.27 m from the base.
+2. The policy receives the joint angles and two 224 x 224 camera images (`front` and `wrist`) and outputs 6 joint targets, at 15 Hz.
+3. The episode runs for 16 s (240 steps) in the MuJoCo viewer, then resets.
+
+The terminal prints the block position at the start of each episode, and `max |action - state|` at step 0. That value is a units check, and it should be small.
+
+<!-- TODO: add the policy run video (GitHub-hosted player).
+  1. On github.com, open README.md and click the pencil (edit) icon.
+  2. Put the cursor at this spot and drag the MP4 into the editor. GitHub uploads it
+     and inserts a https://github.com/user-attachments/assets/... URL.
+  3. Keep that URL on its own line, because that is what renders as a video player.
+  4. Optionally add a caption underneath, for example:
+     *Pretrained ACT policy running in the MuJoCo work-cell.*
+  5. Delete this comment, then commit.
+   -->
+
+Notes:
+
+- A GPU is not needed. On a CPU-only machine LeRobot prints "Device 'cuda' is not available. Switching to 'cpu'". The warning is harmless.
+- There is no automatic success detection yet, so results are judged by watching the viewer.
+- The spawn region (`R_RANGE`, `THETA_RANGE` in the script) is carried over from an earlier version and is not yet confirmed against the model's training data.
+- If the renderer crashes with a segmentation fault, try `MUJOCO_GL=egl python script/run_policy.py`.
+
+The model and its inputs are described in [`docs/HUGGING_FACE.md`](docs/HUGGING_FACE.md).
+
+| | |
+|---|---|
+| Model | [`ahmedsohail2003/act-so101-pickplace-dr`](https://huggingface.co/ahmedsohail2003/act-so101-pickplace-dr), an ACT policy (51.6M parameters) |
+| Training data | [`ahmedsohail2003/so101-sim-pickplace-dr`](https://huggingface.co/datasets/ahmedsohail2003/so101-sim-pickplace-dr): 150 MuJoCo episodes at 15 fps |
+| Inputs | 6 joint angles (radians) + `front` and `wrist` cameras |
+| Output | 6 absolute joint targets (radians) |
 
 ### Run the scripted demo
 
@@ -60,7 +118,7 @@ python script/test_mujoco.py
 
 Opens the MuJoCo viewer and moves the arm back and forth. Close the viewer window to stop the script.
 
-Demo recording: ![Scripted MuJoCo demo](videos/MovingMujoco.gif)
+![Scripted MuJoCo demo](videos/MovingMujoco.gif)
 
 ### Open the work-cell in the interactive viewer
 
@@ -76,11 +134,10 @@ On macOS, use `mjpython` in place of `python` if the viewer refuses to launch.
 
 ![Work Cell with table, cube and tray](images/PickAndPlaceModel.png)
 
-1. **Pause the simulation** with `Space`. The cube is welded to the table while the sim runs, so it can only be repositioned while paused.
+1. **Pause the simulation** with `Space`. The cube only moves reliably while the simulation is paused.
 2. **Select the cube:** hold `Ctrl` + `Shift` and double left-click it.
 3. **Move it:** once the cube turns bright red, hold `Ctrl` + `Shift` and hold the right mouse button while dragging.
 4. Press `Space` again to resume the simulation.
-
 
 #### Viewer controls
 
@@ -96,6 +153,7 @@ On macOS, use `mjpython` in place of `python` if the viewer refuses to launch.
 ## Documentation
 
 - [Model selection](docs/MODEL_SELECTION.md): scoring rubric and candidate comparison. Current provisional pick: [`ahmedsohail2003/act-so101-pickplace-dr`](https://huggingface.co/ahmedsohail2003/act-so101-pickplace-dr) (ACT, simulation-first). NPU latency and INT8 accuracy drop are still to be measured.
+- [Hugging Face model notes](docs/HUGGING_FACE.md): how to read a Hugging Face model repository, and where each value in `run_policy.py` comes from.
 
 ## References
 
@@ -109,5 +167,10 @@ Papers kept in [`papers/`](papers/):
 
 The arm model in `assets/so_arm100/` is vendored from [MuJoCo Menagerie](https://github.com/google-deepmind/mujoco_menagerie) (`trs_so_arm100`), licensed Apache-2.0; see [`assets/so_arm100/LICENSE`](assets/so_arm100/LICENSE).
 
+The work-cell scene (`pickplace.xml`) and the `tcp` site and `wrist` camera added to `so_arm100.xml` come from [`ahmedsohail2003/workcell-partA-imitation`](https://github.com/ahmedsohail2003/workcell-partA-imitation). <!-- TODO: confirm that project's licence and add it here. -->
 
+The pretrained policy is not stored in this repository. It is downloaded at runtime from [`ahmedsohail2003/act-so101-pickplace-dr`](https://huggingface.co/ahmedsohail2003/act-so101-pickplace-dr) (Apache-2.0).
 
+## License
+
+<!-- TODO: add your licence for the original code in this repo. -->
