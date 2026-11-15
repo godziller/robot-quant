@@ -84,15 +84,8 @@ Each episode:
 
 The terminal prints the block position at the start of each episode, and `max |action - state|` at step 0. That value is a units check, and it should be small.
 
-<!-- TODO: add the policy run video (GitHub-hosted player).
-  1. On github.com, open README.md and click the pencil (edit) icon.
-  2. Put the cursor at this spot and drag the MP4 into the editor. GitHub uploads it
-     and inserts a https://github.com/user-attachments/assets/... URL.
-  3. Keep that URL on its own line, because that is what renders as a video player.
-  4. Optionally add a caption underneath, for example:
-     *Pretrained ACT policy running in the MuJoCo work-cell.*
-  5. Delete this comment, then commit.
-   -->
+
+https://github.com/user-attachments/assets/cc51a686-3d8f-43d5-87ad-cd422a5c163e
 
 Notes:
 
