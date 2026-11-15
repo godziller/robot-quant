@@ -84,10 +84,9 @@ Each episode:
 
 The terminal prints the block position at the start of each episode, and `max |action - state|` at step 0. That value is a units check, and it should be small.
 
+https://github.com/user-attachments/assets/e418ac85-5644-495e-875c-56443aa299c5
 
-https://github.com/user-attachments/assets/cc51a686-3d8f-43d5-87ad-cd422a5c163e
-
-Notes:
+**Notes:**
 
 - A GPU is not needed. On a CPU-only machine LeRobot prints "Device 'cuda' is not available. Switching to 'cpu'". The warning is harmless.
 - There is no automatic success detection yet, so results are judged by watching the viewer.
